@@ -2,76 +2,151 @@ using UnityEngine;
 
 public class playermove : MonoBehaviour
 {
-    GameObject scanObject;
-    Vector3 dirVec;
-    Animator anim;
-    public float Speed = 5f;
-    float h;
-    float v;
-    bool isHorizonMove = true;
-    Rigidbody2D rigid;
-    void Start()
+    public Gamemanager manager; // 게임매니저 스크립트를 연결하는 변수
+
+    GameObject scanObject; // 플레이어 앞에 있는 오브젝트를 저장하는 변수
+    Vector3 dirVec; // 플레이어가 바라보는 방향 저장
+
+    Animator anim; // 애니메이션 변수
+
+    public float Speed = 5f; //이동속도
+
+    float h; // 가로축 변수
+    float v; // 세로축 변수
+
+    bool isHorizonMove = true; // 현재 가로 이동중인지 세로 이동중인지 판별
+
+    Rigidbody2D rigid; // 물리 이동을 위한 Rigidbody2D
+
+
+    void Start() // 게임 시작 시 한 번만 실행
     {
-        rigid = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
+        rigid = GetComponent<Rigidbody2D>(); // 오브젝트의 Rigidbody2D 가져오기
+        anim = GetComponent<Animator>(); // 오브젝트의 Animator 가져오기
     }
-    void Update()
+
+    void Update() // 매 프레임마다 실행
     {
+        // 대화창이 열려있는 상태라면
+        if (manager.isAction)
+        {
+            // 플레이어 이동 못하게 변수 초기화
+            h = 0;
+            v = 0;
+
+            // 스페이스바를 누르면 대화 종료
+            if (Input.GetButtonDown("Jump"))
+            {
+                manager.Action(null);
+            }
+            return;
+        }
+
+        // 방향키 또는 WASD 입력값 가져오기
         h = Input.GetAxisRaw("Horizontal");
         v = Input.GetAxisRaw("Vertical");
 
+        // 키를 눌렀는지 확인
         bool hDown = Input.GetButtonDown("Horizontal");
         bool vDown = Input.GetButtonDown("Vertical");
         bool hUp = Input.GetButtonUp("Horizontal");
         bool vUp = Input.GetButtonUp("Vertical");
 
+        // 가로키를 눌렀거나 세로키를 뗐다면
+        // 가로 이동 모드
         if(hDown || vUp)
             isHorizonMove = true;
+
+        // 세로키를 눌렀거나 가로키를 뗐다면
+        // 세로 이동 모드
         else if(vDown || hUp)
             isHorizonMove = false;
-        
+
+        // 좌우 방향 애니메이션 변경
         if (anim.GetInteger("hAxisRaw") != (int)h)
         {
-            anim.SetBool("isChange", true);
-            anim.SetInteger("hAxisRaw",(int)h);
+            anim.SetBool("isChange", true); // 방향이 바뀌었다고 알림
+            anim.SetInteger("hAxisRaw",(int)h); // 새로운 방향 저장
         }
+
+        // 상하 방향 애니메이션 변경
         else if (anim.GetInteger("vAxisRaw") != v)
         {
             anim.SetBool("isChange",true);
             anim.SetInteger("vAxisRaw",(int)v);
         }
+
+        // 방향이 바뀌지 않았다면
         else
             anim.SetBool("isChange",false);
 
+        // 플레이어가 바라보는 방향 저장
         if(vDown && v == 1)
-            dirVec = Vector3.up;
+            dirVec = Vector3.up; // 위
+
         else if(vDown && v == -1)
-            dirVec = Vector3.down;
+            dirVec = Vector3.down; // 아래
+
         else if(hDown && h == -1)
-            dirVec = Vector3.left;
+            dirVec = Vector3.left; // 왼쪽
+
         else if(hDown && h == 1)
-            dirVec = Vector3.right;
-        
+            dirVec = Vector3.right; // 오른쪽
+
+        // 스페이스바를 눌렀고
+        // 앞에 상호작용 가능한 오브젝트가 있다면
         if(Input.GetButtonDown("Jump") && scanObject != null)
         {
-            Debug.Log("this is : " + scanObject.name);
+            // 콘솔창에 오브젝트 이름 출력
+            Debug.Log("this is " + scanObject.name);
+
+            // 대화창 열기
+            manager.Action(scanObject);
         }
     }
 
-    void FixedUpdate()
+    void FixedUpdate() // 물리 연산용 함수
     {
-        Vector2 moveVec = isHorizonMove ? new Vector2(h,0) : new Vector2(0,v);
+        // 대화중이면 이동 금지
+        if (manager.isAction)
+        {
+            rigid.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        // 가로 이동이면 (x,0)
+        // 세로 이동이면 (0,y)
+        Vector2 moveVec = isHorizonMove ?
+                          new Vector2(h,0) :
+                          new Vector2(0,v);
+
+        // 이동속도 적용
         rigid.linearVelocity = moveVec * Speed;
 
-        Debug.DrawRay(rigid.position, dirVec * 0.7f , new Color(0,1,0));
-        RaycastHit2D rayhit = Physics2D.Raycast(rigid.position, dirVec, 0.7f, LayerMask.GetMask("object"));
+        // Scene 창에서 레이 확인용 초록선
+        Debug.DrawRay(
+            rigid.position,
+            dirVec * 0.7f,
+            new Color(0,1,0)
+        );
 
-         if(rayhit.collider != null)
+        // 플레이어가 바라보는 방향으로 레이 발사
+        RaycastHit2D rayhit = Physics2D.Raycast(
+            rigid.position,              // 시작 위치
+            dirVec,                      // 방향
+            0.7f,                        // 거리
+            LayerMask.GetMask("object")  // object 레이어만 감지
+        );
+
+        // 오브젝트가 감지되었다면
+        if(rayhit.collider != null)
         {
             scanObject = rayhit.collider.gameObject;
         }
+        // 아무것도 없다면
         else
-            scanObject = null; 
+        {
+            scanObject = null;
+        }
     }
 }
-
