@@ -1,0 +1,56 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class PlayerHealth : MonoBehaviour
+{
+    public int maxHp = 100;
+    public int currentHp;
+
+    public Slider hpSlider;
+    public  GameObject endPanel;
+    void Start()
+    {
+        currentHp = maxHp;
+        hpSlider.maxValue = maxHp;
+        hpSlider.value = currentHp;
+        endPanel.SetActive(false);
+    }
+
+    public void Damage(int damage)
+    {
+        currentHp -= damage;
+
+        if (currentHp < 0)
+            currentHp = 0;
+
+        hpSlider.value = currentHp;
+
+        if(currentHp <= 0)
+        {
+            Die();
+        }
+    }
+
+    public void Heal(int heal)
+    {
+        currentHp += heal;
+
+        if (currentHp > maxHp)
+            currentHp = maxHp;
+
+        hpSlider.value = currentHp;
+    }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            Damage(10);
+        }
+    }
+
+    void Die()
+    {
+        endPanel.SetActive(true);
+        Time.timeScale = 0f;
+    }
+}
