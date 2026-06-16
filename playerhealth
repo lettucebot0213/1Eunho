@@ -3,54 +3,58 @@ using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
-    public int maxHp = 100;
-    public int currentHp;
+    public int maxHp = 100; // 플레이어의 최대 체력
+    public int currentHp; // 현재 체력
 
-    public Slider hpSlider;
-    public  GameObject endPanel;
-    void Start()
+    public Slider hpSlider; // 체력바 UI
+    public GameObject endPanel; // 게임 오버 시 표시할 패널
+
+    void Start() // 게임 시작 시 한 번 실행
     {
-        currentHp = maxHp;
-        hpSlider.maxValue = maxHp;
-        hpSlider.value = currentHp;
-        endPanel.SetActive(false);
+        currentHp = maxHp; // 현재 체력을 최대 체력으로 설정
+
+        hpSlider.maxValue = maxHp; // 슬라이더 최대값 설정
+        hpSlider.value = currentHp; // 슬라이더 현재값 설정
+
+        endPanel.SetActive(false); // 게임 시작 시 엔딩 패널 비활성화
     }
 
-    public void Damage(int damage)
+    public void Damage(int damage) // 플레이어가 데미지를 받을 때 호출
     {
-        currentHp -= damage;
+        currentHp -= damage; // 현재 체력 감소
 
         if (currentHp < 0)
-            currentHp = 0;
+            currentHp = 0; // 체력이 0 이하로 내려가지 않도록 제한
 
-        hpSlider.value = currentHp;
+        hpSlider.value = currentHp; // 체력바 갱신
 
-        if(currentHp <= 0)
+        if(currentHp <= 0) // 체력이 0 이하가 되면
         {
-            Die();
+            Die(); // 사망 처리
         }
     }
 
-    public void Heal(int heal)
+    public void Heal(int heal) // 플레이어가 회복할 때 호출
     {
-        currentHp += heal;
+        currentHp += heal; // 현재 체력 증가
 
         if (currentHp > maxHp)
-            currentHp = maxHp;
+            currentHp = maxHp; // 최대 체력을 초과하지 않도록 제한
 
-        hpSlider.value = currentHp;
+        hpSlider.value = currentHp; // 체력바 갱신
     }
-    void Update()
+
+    void Update() // 매 프레임마다 실행
     {
-        if (Input.GetKeyDown(KeyCode.H))
+        if (Input.GetKeyDown(KeyCode.H)) // H 키를 누르면
         {
-            Damage(10);
+            Damage(10); // 체력 10 감소 (테스트용)
         }
     }
 
-    void Die()
+    void Die() // 플레이어가 사망했을 때 실행
     {
-        endPanel.SetActive(true);
-        Time.timeScale = 0f;
+        endPanel.SetActive(true); // 게임 오버 패널 표시
+        Time.timeScale = 0f; // 게임 시간 정지
     }
 }
