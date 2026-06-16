@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DataObj : MonoBehaviour
 {
-    public int id;
-    public bool isNpc;
-    
+    public int id; // 대화 데이터나 오브젝트 정보를 불러오기 위한 ID 값
+
+    public bool isNpc; // NPC인지 일반 오브젝트인지 판별하는 변수
 }
