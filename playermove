@@ -2,39 +2,117 @@ using UnityEngine;
 
 public class playermove : MonoBehaviour
 {
-    public Gamemanager manager; // 게임매니저 스크립트를 연결하는 변수
+    public Gamemanager manager; // 대화창 및 게임 상태를 관리하는 게임매니저
 
-    GameObject scanObject; // 플레이어 앞에 있는 오브젝트를 저장하는 변수
-    Vector3 dirVec; // 플레이어가 바라보는 방향 저장
+    GameObject scanObject; // 플레이어가 바라보고 있는 오브젝트
+    Vector3 dirVec; // 플레이어가 바라보는 방향
+    Animator anim; // 애니메이터 컴포넌트
+    public float Speed = 5f; // 플레이어 이동 속도
 
-    Animator anim; // 애니메이션 변수
+    float h; // 좌우 입력값
+    float v; // 상하 입력값
 
-    public float Speed = 5f; //이동속도
+    bool isHorizonMove = true; // 마지막 이동 방향이 가로인지 확인
 
-    float h; // 가로축 변수
-    float v; // 세로축 변수
+    Rigidbody2D rigid; // Rigidbody2D 컴포넌트
 
-    bool isHorizonMove = true; // 현재 가로 이동중인지 세로 이동중인지 판별
-
-    Rigidbody2D rigid; // 물리 이동을 위한 Rigidbody2D
-
-
-    void Start() // 게임 시작 시 한 번만 실행
+    void Start() // 게임 시작 시 한 번 실행
     {
-        rigid = GetComponent<Rigidbody2D>(); // 오브젝트의 Rigidbody2D 가져오기
-        anim = GetComponent<Animator>(); // 오브젝트의 Animator 가져오기
+        rigid = GetComponent<Rigidbody2D>(); // Rigidbody2D 가져오기
+        anim = GetComponent<Animator>(); // Animator 가져오기
     }
 
     void Update() // 매 프레임마다 실행
     {
-        // 대화창이 열려있는 상태라면
-        if (manager.isAction)
+        if (manager.isAction) // 대화 중일 경우
         {
-            // 플레이어 이동 못하게 변수 초기화
             h = 0;
-            v = 0;
+            v = 0; // 이동 입력 제거
 
-            // 스페이스바를 누르면 대화 종료
+            if (Input.GetButtonDown("Jump")) // 스페이스바 입력 시
+            {
+                manager.Action(null); // 대화 종료
+            }
+            return;
+        }
+
+        h = Input.GetAxisRaw("Horizontal"); // 좌우 입력 받기
+        v = Input.GetAxisRaw("Vertical"); // 상하 입력 받기
+
+        bool hDown = Input.GetButtonDown("Horizontal"); // 좌우키 눌림 감지
+        bool vDown = Input.GetButtonDown("Vertical"); // 상하키 눌림 감지
+        bool hUp = Input.GetButtonUp("Horizontal"); // 좌우키 뗌 감지
+        bool vUp = Input.GetButtonUp("Vertical"); // 상하키 뗌 감지
+
+        if(hDown || vUp)
+            isHorizonMove = true; // 가로 이동 상태
+        else if(vDown || hUp)
+            isHorizonMove = false; // 세로 이동 상태
+
+        // 애니메이터 파라미터 변경
+        if (anim.GetInteger("hAxisRaw") != (int)h)
+        {
+            anim.SetBool("isChange", true);
+            anim.SetInteger("hAxisRaw",(int)h);
+        }
+        else if (anim.GetInteger("vAxisRaw") != v)
+        {
+            anim.SetBool("isChange",true);
+            anim.SetInteger("vAxisRaw",(int)v);
+        }
+        else
+            anim.SetBool("isChange",false);
+
+        // 플레이어가 바라보는 방향 저장
+        if(vDown && v == 1)
+            dirVec = Vector3.up;
+        else if(vDown && v == -1)
+            dirVec = Vector3.down;
+        else if(hDown && h == -1)
+            dirVec = Vector3.left;
+        else if(hDown && h == 1)
+            dirVec = Vector3.right;
+
+        // 상호작용 키 입력 시
+        if(Input.GetButtonDown("Jump") && scanObject != null)
+        {
+            Debug.Log("this is" + scanObject.name); // 확인용 로그 출력
+            manager.Action(scanObject); // 오브젝트와 상호작용
+        }
+    }
+
+    void FixedUpdate() // 물리 연산 처리
+    {
+        if (manager.isAction) // 대화 중일 경우
+        {
+            rigid.linearVelocity = Vector2.zero; // 이동 정지
+            return;
+        }
+
+        // 가로 또는 세로 방향으로 이동
+        Vector2 moveVec = isHorizonMove ? new Vector2(h,0) : new Vector2(0,v);
+
+        rigid.linearVelocity = moveVec * Speed; // 실제 이동 적용
+
+        // 플레이어 앞 방향으로 레이 표시
+        Debug.DrawRay(rigid.position, dirVec * 0.7f , new Color(0,1,0));
+
+        // 플레이어 앞 오브젝트 탐색
+        RaycastHit2D rayhit = Physics2D.Raycast(
+            rigid.position,
+            dirVec,
+            0.7f,
+            LayerMask.GetMask("object")
+        );
+
+        if(rayhit.collider != null)
+        {
+            scanObject = rayhit.collider.gameObject; // 오브젝트 발견
+        }
+        else
+            scanObject = null; // 아무것도 없으면 초기화
+    }
+}            // 스페이스바를 누르면 대화 종료
             if (Input.GetButtonDown("Jump"))
             {
                 manager.Action(null);
