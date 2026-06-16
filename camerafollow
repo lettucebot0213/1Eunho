@@ -2,21 +2,21 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    public Transform target;
-    public float speed = 5f;
+    public Transform target; // 따라갈 대상(플레이어)
+    public float speed = 5f; // 카메라가 따라가는 속도
 
-    void LateUpdate()
+    void LateUpdate() // 모든 Update가 끝난 후 실행
     {
         Vector3 targetPos = new Vector3(
-            target.position.x,
-            target.position.y,
-            -10f
+            target.position.x, // 플레이어의 x좌표
+            target.position.y, // 플레이어의 y좌표
+            -10f               // 카메라 z축 위치 (2D 카메라는 보통 -10)
         );
 
         transform.position = Vector3.Lerp(
-            transform.position,
-            targetPos,
-            speed * Time.deltaTime
+            transform.position, // 현재 카메라 위치
+            targetPos,          // 이동할 목표 위치
+            speed * Time.deltaTime // 부드럽게 이동하기 위한 속도
         );
     }
 }
