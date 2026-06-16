@@ -4,23 +4,32 @@ using UnityEngine;
 
 public class Talkmanager : MonoBehaviour
 {
-   Dictionary<int, string[]> talkData;
-    void Awake()
+    Dictionary<int, string[]> talkData; // NPC와 오브젝트의 대화 데이터를 저장하는 딕셔너리
+
+    void Awake() // 게임 시작 시 가장 먼저 실행
     {
-        talkData = new Dictionary<int, string[]>();
-        GenerateDate();
+        talkData = new Dictionary<int, string[]>(); // 딕셔너리 생성
+        GenerateDate(); // 대화 데이터 추가
     }
 
-    void GenerateDate()
+    void GenerateDate() // 대화 데이터 생성
     {
-        talkData.Add(1000, new string[] {"hello" , "i am npc1"});
+        // ID가 1000인 NPC의 대사 등록
+        talkData.Add(1000, new string[]
+        {
+            "안녕?",
+            "나는 npc1이야",
+            "우리는 너의 도움이 필요해",
+            "F를 누르면 공격할 수 있어",
+            "저 옆에 있는 무시무시한 괴물을 무찔러줘"
+        });
     }
 
-    public string GetTalk(int id, int talkIndex)
+    public string GetTalk(int id, int talkIndex) // ID와 대사 번호를 이용해 대사 반환
     {
-        if(talkIndex == talkData[id].Length)
-            return null;
+        if(talkIndex == talkData[id].Length) // 마지막 대사까지 출력했다면
+            return null; // 대화 종료
         else
-            return talkData[id][talkIndex];
+            return talkData[id][talkIndex]; // 해당 순서의 대사 반환
     }
 }
